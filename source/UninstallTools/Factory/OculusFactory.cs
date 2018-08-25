@@ -22,7 +22,7 @@ namespace UninstallTools.Factory
             get
             {
                 if (!_helperAvailable.HasValue)
-                    _helperAvailable = WindowsTools.CheckNetFramework4Installed(true) && File.Exists(HelperPath);
+                    _helperAvailable = WindowsTools.CheckNetFramework4Installed(true) && UninstallToolsGlobalConfig.IO.FileExists(HelperPath);
 
                 return _helperAvailable.Value;
             }
@@ -58,13 +58,13 @@ namespace UninstallTools.Factory
                 };
 
                 var executable = data["LaunchFile"];
-                if (File.Exists(executable))
+                if (UninstallToolsGlobalConfig.IO.FileExists(executable))
                 {
                     ExecutableAttributeExtractor.FillInformationFromFileAttribs(entry, executable, true);
                     entry.DisplayIcon = executable;
                 }
 
-                if (Directory.Exists(entry.InstallLocation))
+                if (UninstallToolsGlobalConfig.IO.DirectoryExists(entry.InstallLocation))
                     entry.InstallDate = Directory.GetCreationTime(entry.InstallLocation);
 
                 if (string.IsNullOrEmpty(entry.RawDisplayName))

@@ -129,7 +129,7 @@ namespace UninstallTools.Startup.Normal
                 if (Disabled)
                     return StartupEntryManager.DisableFunctions.StillExists(this);
 
-                if (!IsRegKey) return File.Exists(FullLongName);
+                if (!IsRegKey) return UninstallToolsGlobalConfig.IO.FileExists(FullLongName);
 
                 using (var key = RegistryTools.OpenRegistryKey(ParentLongName))
                     return !string.IsNullOrEmpty(key.GetValue(EntryLongName) as string);

@@ -28,7 +28,7 @@ namespace UninstallTools.Factory
             get
             {
                 if (!_helperIsAvailable.HasValue)
-                    _helperIsAvailable = File.Exists(HelperPath) && WindowsTools.CheckNetFramework4Installed(true);
+                    _helperIsAvailable = UninstallToolsGlobalConfig.IO.FileExists(HelperPath) && WindowsTools.CheckNetFramework4Installed(true);
                 return _helperIsAvailable.Value;
             }
         }

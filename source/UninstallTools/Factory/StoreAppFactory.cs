@@ -36,7 +36,7 @@ namespace UninstallTools.Factory
         public IEnumerable<ApplicationUninstallerEntry> GetUninstallerEntries(
             ListGenerationProgress.ListGenerationCallback progressCallback)
         {
-            if (!WindowsTools.CheckNetFramework4Installed(true) || !File.Exists(StoreAppHelperPath))
+            if (!WindowsTools.CheckNetFramework4Installed(true) || !UninstallToolsGlobalConfig.IO.FileExists(StoreAppHelperPath))
                 yield break;
 
             var output = FactoryTools.StartProcessAndReadOutput(StoreAppHelperPath, "/query");
@@ -47,7 +47,7 @@ namespace UninstallTools.Factory
             
             foreach (var data in FactoryTools.ExtractAppDataSetsFromHelperOutput(output))
             {
-                if (!data.ContainsKey("InstalledLocation") || !Directory.Exists(data["InstalledLocation"])) continue;
+                if (!data.ContainsKey("InstalledLocation") || !UninstallToolsGlobalConfig.IO.DirectoryExists(data["InstalledLocation"])) continue;
 
                 var fullName = data["FullName"];
                 var uninstallStr = $"\"{StoreAppHelperPath}\" /uninstall \"{fullName}\"";
@@ -69,7 +69,7 @@ namespace UninstallTools.Factory
                     SystemComponent = isProtected
                 };
 
-                if (File.Exists(data["Logo"]))
+                if (UninstallToolsGlobalConfig.IO.FileExists(data["Logo"]))
                 {
                     try
                     {

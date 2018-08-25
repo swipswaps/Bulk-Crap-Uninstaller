@@ -471,6 +471,10 @@
       <Project>{4f843421-01d4-48e8-b88b-cdf30dd671a4}</Project>
       <Name>KlocTools</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NtfsReader\NtfsReader.csproj">
+      <Project>{dbacefc5-0234-4317-b096-f212ecae1dd1}</Project>
+      <Name>NtfsReader</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\add.png" />

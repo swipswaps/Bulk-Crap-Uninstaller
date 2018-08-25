@@ -97,7 +97,7 @@ namespace BulkCrapUninstaller.Functions
         private static bool CheckForRunningProcessesBeforeCleanup(IEnumerable<IJunkResult> entries)
         {
             var filters = entries.OfType<FileSystemJunk>()
-                .Select(x => x.Path.FullName)
+                .Select(x => x.Path)
                 .Distinct().ToArray();
 
             return CheckForRunningProcesses(filters, false);
@@ -519,7 +519,7 @@ namespace BulkCrapUninstaller.Functions
                     _ =>
                     {
                         items.AddRange(DirectoryFactory.TryCreateFromDirectory(
-                            new DirectoryInfo(result), null, new string[] { }));
+                            result, null, new string[] { }));
                     });
 
                 if (items.Count == 0)
@@ -687,7 +687,7 @@ namespace BulkCrapUninstaller.Functions
                     continue;
                 }
 
-                var res = DirectoryFactory.TryCreateFromDirectory(dir, exceptions).ToList();
+                var res = DirectoryFactory.TryCreateFromDirectory(dir.FullName, exceptions).ToList();
                 if (res.Count == 0)
                 {
                     MessageBox.Show(

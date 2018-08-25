@@ -57,7 +57,7 @@ namespace UninstallTools.Factory.InfoAdders
 
             ProcessStartCommand ps;
             if (ProcessStartCommand.TryParse(uninstallString, out ps) && Path.IsPathRooted(ps.FileName) &&
-                File.Exists(ps.FileName))
+                UninstallToolsGlobalConfig.IO.FileExists(ps.FileName))
             {
                 try
                 {
@@ -66,7 +66,7 @@ namespace UninstallTools.Factory.InfoAdders
                     if (fileName != null && InnoSetupFilenameRegex.IsMatch(fileName))
                     {
                         // Check if Inno Setup Uninstall Log exists
-                        if (File.Exists(ps.FileName.Substring(0, ps.FileName.Length - 3) + "dat"))
+                        if (UninstallToolsGlobalConfig.IO.FileExists(ps.FileName.Substring(0, ps.FileName.Length - 3) + "dat"))
                             return UninstallerType.InnoSetup;
                     }
                     

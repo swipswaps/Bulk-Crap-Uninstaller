@@ -18,7 +18,7 @@ namespace UninstallTools.Junk.Finders.Drive
 {
     public class CommonDriveJunkScanner : JunkCreatorBase
     {
-        private static IEnumerable<DirectoryInfo> _foldersToCheck;
+        private static IEnumerable<string> _foldersToCheck;
         private ApplicationUninstallerEntry _uninstaller;
 
         public override void Setup(ICollection<ApplicationUninstallerEntry> allUninstallers)
@@ -26,12 +26,13 @@ namespace UninstallTools.Junk.Finders.Drive
             base.Setup(allUninstallers);
 
             var allDirs = UninstallToolsGlobalConfig.JunkSearchDirs.Concat(UninstallToolsGlobalConfig.GetAllProgramFiles());
-            var validDirs = allDirs.Attempt(dir =>
-                            {
-                                var dirinfo = new DirectoryInfo(dir);
-                                return dirinfo.Exists ? dirinfo : null;
-                            }).Where(x => x != null);
-            _foldersToCheck = validDirs.DistinctBy(x => x.FullName.ToLowerInvariant()).ToList();
+
+            var validDirs = allDirs.Where(x=>!string.IsNullOrEmpty(x))
+                .Select(x=>x.Trim().TrimEnd('\\', '/', ' ').ToLowerInvariant())
+                .Distinct()
+                .Where(Directory.Exists);
+
+            _foldersToCheck = validDirs.ToList();
         }
 
         public override IEnumerable<IJunkResult> FindJunk(ApplicationUninstallerEntry target)
@@ -43,20 +44,20 @@ namespace UninstallTools.Junk.Finders.Drive
 
         public override string CategoryName => Localisation.Junk_Drive_GroupName;
 
-        private IEnumerable<FileSystemJunk> FindJunkRecursively(DirectoryInfo directory, int level = 0)
+        private IEnumerable<FileSystemJunk> FindJunkRecursively(string directory, int level = 0)
         {
             var results = new List<FileSystemJunk>();
 
             try
             {
-                var dirs = directory.GetDirectories();
+                var dirs = UninstallToolsGlobalConfig.IO.GetDirectories(directory);
 
                 foreach (var dir in dirs)
                 {
                     if (UninstallToolsGlobalConfig.IsSystemDirectory(dir))
                         continue;
 
-                    var generatedConfidence = GenerateConfidence(dir.Name, directory.FullName, level).ToList();
+                    var generatedConfidence = GenerateConfidence(Path.GetFileName(dir), directory, level).ToList();
 
                     FileSystemJunk newNode = null;
                     if (generatedConfidence.Any())
@@ -64,7 +65,7 @@ namespace UninstallTools.Junk.Finders.Drive
                         newNode = new FileSystemJunk(dir, _uninstaller, this);
                         newNode.Confidence.AddRange(generatedConfidence);
 
-                        if (CheckIfDirIsStillUsed(dir.FullName, GetOtherInstallLocations(_uninstaller)))
+                        if (CheckIfDirIsStillUsed(dir, GetOtherInstallLocations(_uninstaller)))
                             newNode.Confidence.Add(ConfidenceRecords.DirectoryStillUsed);
 
                         results.Add(newNode);
@@ -78,10 +79,10 @@ namespace UninstallTools.Junk.Finders.Drive
                     if (newNode != null)
                     {
                         // Check if the directory will have nothing left after junk removal.
-                        if (!dir.GetFiles().Any())
+                        if (!UninstallToolsGlobalConfig.IO.GetFiles(dir).Any())
                         {
-                            var subDirs = dir.GetDirectories();
-                            if (!subDirs.Any() || subDirs.All(d => junkNodes.Any(y => PathTools.PathsEqual(d.FullName, y.Path.FullName))))
+                            var subDirs = UninstallToolsGlobalConfig.IO.GetDirectories(dir).ToList();
+                            if (!subDirs.Any() || subDirs.All(d => junkNodes.Any(y => PathTools.PathsEqual(d, y.Path))))
                                 newNode.Confidence.Add(ConfidenceRecords.AllSubdirsMatched);
                         }
                     }

@@ -167,7 +167,7 @@ namespace UninstallTools.Startup.Normal
             }
             else
             {
-                if (File.Exists(startupEntry.FullLongName))
+                if (UninstallToolsGlobalConfig.IO.FileExists(startupEntry.FullLongName))
                 {
                     File.Delete(newPath);
                     Directory.CreateDirectory(DriveDisableBackupPath);
@@ -195,7 +195,7 @@ namespace UninstallTools.Startup.Normal
                 // Move the backup file back to its original location
                 var oldPath = GetDisabledEntryPath(startupEntry);
 
-                if (File.Exists(oldPath))
+                if (UninstallToolsGlobalConfig.IO.FileExists(oldPath))
                 {
                     File.Delete(startupEntry.FullLongName);
                     File.Move(oldPath, startupEntry.FullLongName);

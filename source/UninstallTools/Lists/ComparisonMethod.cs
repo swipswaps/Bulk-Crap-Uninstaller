@@ -15,6 +15,10 @@ namespace UninstallTools.Lists
         [LocalisedName(typeof (Localisation), "FilterComparisonMethod_Contains")] Contains,
         [LocalisedName(typeof (Localisation), "FilterComparisonMethod_StartsWith")] StartsWith,
         [LocalisedName(typeof (Localisation), "FilterComparisonMethod_EndsWith")] EndsWith,
+         MoreThan,
+         LessThan,
+        //[LocalisedName(typeof(Localisation), "FilterComparisonMethod_MoreThan")] MoreThan,
+        //[LocalisedName(typeof(Localisation), "FilterComparisonMethod_LessThan")] LessThan,
         [LocalisedName(typeof (Localisation), "FilterComparisonMethod_Regex")] Regex
     }
 }

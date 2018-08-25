@@ -15,7 +15,7 @@ namespace UninstallTools.Junk.Finders.Drive
     {
         public override IEnumerable<IJunkResult> FindJunk(ApplicationUninstallerEntry target)
         {
-            if (!File.Exists(target.UninstallerFullFilename))
+            if (!UninstallToolsGlobalConfig.IO.FileExists(target.UninstallerFullFilename))
                 yield break;
 
             FileSystemJunk result;
@@ -26,15 +26,14 @@ namespace UninstallTools.Junk.Finders.Drive
                     var dirPath = Path.GetDirectoryName(target.UninstallerFullFilename);
 
                     if (dirPath == null) yield break;
-
-                    var targetDir = new DirectoryInfo(dirPath);
-                    result = new FileSystemJunk(targetDir, target, this);
+                    
+                    result = new FileSystemJunk(dirPath, target, this);
                     break;
 
                 case UninstallerType.InnoSetup:
                 case UninstallerType.Msiexec:
                 case UninstallerType.Nsis:
-                    result = new FileSystemJunk(new FileInfo(target.UninstallerFullFilename), target, this);
+                    result = new FileSystemJunk(target.UninstallerFullFilename, target, this);
                     break;
 
                 default:

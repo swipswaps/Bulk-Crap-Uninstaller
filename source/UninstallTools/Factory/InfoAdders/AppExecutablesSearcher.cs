@@ -43,17 +43,16 @@ namespace UninstallTools.Factory.InfoAdders
                     return;
             }*/
 
-            if (!Directory.Exists(target.InstallLocation))
+            if (!UninstallToolsGlobalConfig.IO.DirectoryExists(target.InstallLocation))
                 return;
 
             var trimmedDispName = target.DisplayNameTrimmed;
 
             try
             {
-                var results = ScanDirectory(new DirectoryInfo(target.InstallLocation));
+                var results = ScanDirectory(target.InstallLocation);
 
-                target.SortedExecutables = SortListExecutables(results.ExecutableFiles, trimmedDispName)
-                    .Select(x => x.FullName).ToArray();
+                target.SortedExecutables = SortListExecutables(results.ExecutableFiles, trimmedDispName).ToArray();
             }
             catch (IOException)
             {
@@ -63,20 +62,25 @@ namespace UninstallTools.Factory.InfoAdders
             }
         }
 
-        internal static ScanDirectoryResult ScanDirectory(DirectoryInfo directory)
+        internal static ScanDirectoryResult ScanDirectory(string directory)
         {
-            var results = new List<FileInfo>(directory.GetFiles("*.exe", SearchOption.TopDirectoryOnly));
-            var otherSubdirs = new List<DirectoryInfo>();
-            var binSubdirs = new List<DirectoryInfo>();
-            foreach (var subdir in directory.GetDirectories())
+            IEnumerable<string> GetExeFiles(string dir)
+            {
+                return UninstallToolsGlobalConfig.IO.GetFiles(dir).Where(x => x.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
+            }
+
+            var results = GetExeFiles(directory).ToList();
+            var otherSubdirs = new List<string>();
+            var binSubdirs = new List<string>();
+            foreach (var subdir in UninstallToolsGlobalConfig.IO.GetDirectories(directory))
             {
                 try
                 {
-                    var subName = subdir.Name;
+                    var subName = Path.GetDirectoryName(subdir) ?? string.Empty;
                     if (subName.StartsWithAny(BinaryDirectoryNames, StringComparison.OrdinalIgnoreCase))
                     {
                         binSubdirs.Add(subdir);
-                        results.AddRange(subdir.GetFiles("*.exe", SearchOption.TopDirectoryOnly));
+                        results.AddRange(GetExeFiles(subdir));
                     }
                     else
                     {
@@ -98,24 +102,28 @@ namespace UninstallTools.Factory.InfoAdders
             return new ScanDirectoryResult(results, binSubdirs, otherSubdirs);
         }
 
-        internal static IEnumerable<FileInfo> SortListExecutables(IEnumerable<FileInfo> targets, string targetString)
+        internal static IEnumerable<string> SortListExecutables(IEnumerable<string> targets, string targetString)
         {
-            return targets.OrderBy(x => Sift4.SimplestDistance(x.Name, targetString, 3));
+            return from target in targets
+                   let name = Path.GetFileName(target)
+                   where name != null
+                   orderby Sift4.SimplestDistance(name, targetString, 3)
+                   select target;
         }
 
         internal sealed class ScanDirectoryResult
         {
-            public ScanDirectoryResult(ICollection<FileInfo> executableFiles,
-                ICollection<DirectoryInfo> binSubdirs, ICollection<DirectoryInfo> otherSubdirs)
+            public ScanDirectoryResult(ICollection<string> executableFiles,
+                ICollection<string> binSubdirs, ICollection<string> otherSubdirs)
             {
                 OtherSubdirs = otherSubdirs;
                 ExecutableFiles = executableFiles;
                 BinSubdirs = binSubdirs;
             }
 
-            public ICollection<DirectoryInfo> BinSubdirs { get; }
-            public ICollection<FileInfo> ExecutableFiles { get; }
-            public ICollection<DirectoryInfo> OtherSubdirs { get; }
+            public ICollection<string> BinSubdirs { get; }
+            public ICollection<string> ExecutableFiles { get; }
+            public ICollection<string> OtherSubdirs { get; }
         }
     }
 }

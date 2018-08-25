@@ -381,7 +381,7 @@ namespace UninstallTools.Dialogs
         private void createBackupToolStripMenuItem_Click(object sender, EventArgs e)
         {
             folderBrowserDialog.ShowDialog(this);
-            if (!Directory.Exists(folderBrowserDialog.SelectedPath)) return;
+            if (!UninstallToolsGlobalConfig.IO.DirectoryExists(folderBrowserDialog.SelectedPath)) return;
 
             foreach (var item in Selection)
             {

@@ -21,7 +21,7 @@ namespace UninstallTools.Junk
         private string[] _otherInstallLocations;
         private string[] _otherNames;
         private string[] _otherPublishers;
-        private IEnumerable<KeyValuePair<DirectoryInfo, bool?>> _programFilesDirectories;
+        private IEnumerable<KeyValuePair<string, bool?>> _programFilesDirectories;
 
         public IEnumerable<IJunkResult> FindJunk(ApplicationUninstallerEntry target)
         {
@@ -33,8 +33,8 @@ namespace UninstallTools.Junk
         {
             var output = new List<FileSystemJunk>();
 
-            foreach (var kvp in _programFilesDirectories)
-                FindJunkRecursively(output, kvp.Key, 0);
+            foreach (var kvp in _programFilesDirectories.Where(x=> Directory.Exists(x.Key)))
+                FindJunkRecursively(output, new DirectoryInfo(kvp.Key), 0);
 
             return output.Cast<IJunkResult>();
         }
@@ -50,7 +50,7 @@ namespace UninstallTools.Junk
 
                 foreach (var subDirectory in subDirectories)
                 {
-                    if (UninstallToolsGlobalConfig.IsSystemDirectory(subDirectory))
+                    if (UninstallToolsGlobalConfig.IsSystemDirectory(subDirectory.FullName))
                         continue;
 
                     if (subDirectory.FullName.ContainsAny(_otherInstallLocations, StringComparison.CurrentCultureIgnoreCase))
@@ -90,7 +90,7 @@ namespace UninstallTools.Junk
 
                     if (resultRecord == null) continue;
 
-                    var newNode = new FileSystemJunk(subDirectory, null, this);
+                    var newNode = new FileSystemJunk(subDirectory.FullName, null, this);
                     newNode.Confidence.Add(resultRecord);
 
                     if (subDirectory.Name.ContainsAny(_otherPublishers, StringComparison.CurrentCultureIgnoreCase))

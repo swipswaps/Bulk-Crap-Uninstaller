@@ -45,7 +45,7 @@ namespace UninstallTools.Factory.InfoAdders
 
         private static IEnumerable<string> FindExtraExecutables(string directoryPath)
         {
-            if (Directory.Exists(directoryPath))
+            if (UninstallToolsGlobalConfig.IO.DirectoryExists(directoryPath))
             {
                 try
                 {

@@ -46,12 +46,12 @@ namespace UninstallTools.Factory
         {
             _steamHelperIsAvailable = false;
 
-            if (File.Exists(SteamHelperPath) && WindowsTools.CheckNetFramework4Installed(true))
+            if (UninstallToolsGlobalConfig.IO.FileExists(SteamHelperPath) && WindowsTools.CheckNetFramework4Installed(true))
             {
                 var output = FactoryTools.StartProcessAndReadOutput(SteamHelperPath, "steam");
                 if (!string.IsNullOrEmpty(output)
                     && !output.Contains("error", StringComparison.InvariantCultureIgnoreCase)
-                    && Directory.Exists(output = output.Trim().TrimEnd('\\', '/')))
+                    && UninstallToolsGlobalConfig.IO.DirectoryExists(output = output.Trim().TrimEnd('\\', '/')))
                 {
                     _steamHelperIsAvailable = true;
                     SteamLocation = output;

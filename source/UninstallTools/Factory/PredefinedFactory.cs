@@ -45,7 +45,7 @@ namespace UninstallTools.Factory
                     result.RegistryKeyName = key.GetKeyName();
 
                     result.InstallLocation = key.GetValue("CurrentVersionPath") as string;
-                    if (result.InstallLocation == null || !Directory.Exists(result.InstallLocation))
+                    if (result.InstallLocation == null || !UninstallToolsGlobalConfig.IO.DirectoryExists(result.InstallLocation))
                         return null;
 
                     result.DisplayIcon = key.GetValue("OneDriveTrigger") as string;
@@ -60,10 +60,10 @@ namespace UninstallTools.Factory
             // Check if the uninstaller is available
             var systemRoot = WindowsTools.GetEnvironmentPath(CSIDL.CSIDL_WINDOWS);
             var uninstallPath = Path.Combine(systemRoot, @"System32\OneDriveSetup.exe");
-            if (!File.Exists(uninstallPath))
+            if (!UninstallToolsGlobalConfig.IO.FileExists(uninstallPath))
             {
                 uninstallPath = Path.Combine(systemRoot, @"SysWOW64\OneDriveSetup.exe");
-                if (!File.Exists(uninstallPath))
+                if (!UninstallToolsGlobalConfig.IO.FileExists(uninstallPath))
                     uninstallPath = null;
             }
 
@@ -72,7 +72,7 @@ namespace UninstallTools.Factory
                 result.IsValid = true;
                 result.UninstallString = $"\"{uninstallPath}\" /uninstall";
                 result.QuietUninstallString = result.UninstallString;
-                if (!File.Exists(result.DisplayIcon))
+                if (!UninstallToolsGlobalConfig.IO.FileExists(result.DisplayIcon))
                     result.DisplayIcon = uninstallPath;
             }
 
@@ -106,7 +106,7 @@ namespace UninstallTools.Factory
                 UninstallerKind = UninstallerType.Nsis,
                 UninstallString = Path.Combine(SteamFactory.SteamLocation, "uninstall.exe"),
                 IsOrphaned = true,
-                IsValid = File.Exists(Path.Combine(SteamFactory.SteamLocation, "uninstall.exe")),
+                IsValid = UninstallToolsGlobalConfig.IO.FileExists(Path.Combine(SteamFactory.SteamLocation, "uninstall.exe")),
                 InstallDate = Directory.GetCreationTime(SteamFactory.SteamLocation),
                 Publisher = "Valve Corporation"
             };

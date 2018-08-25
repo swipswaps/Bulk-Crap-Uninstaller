@@ -3,7 +3,6 @@
     Apache License Version 2.0
 */
 
-using System;
 using System.IO;
 using System.Security.Permissions;
 using Klocman.Tools;
@@ -13,12 +12,12 @@ namespace UninstallTools.Junk.Containers
 {
     public class FileSystemJunk : JunkResultBase
     {
-        public FileSystemJunk(FileSystemInfo path, ApplicationUninstallerEntry application, IJunkCreator source) : base(application, source)
+        public FileSystemJunk(string path, ApplicationUninstallerEntry application, IJunkCreator source) : base(application, source)
         {
             Path = path;
         }
 
-        public FileSystemInfo Path { get; }
+        public string Path { get; }
 
         public override void Backup(string backupDirectory)
         {
@@ -27,28 +26,27 @@ namespace UninstallTools.Junk.Containers
 
         public override void Delete()
         {
-            if (Path is DirectoryInfo)
-                FileSystem.DeleteDirectory(Path.FullName, UIOption.OnlyErrorDialogs,
+            // Use direct .Exists for safety
+            if (Directory.Exists(Path))
+                FileSystem.DeleteDirectory(Path, UIOption.OnlyErrorDialogs,
                     RecycleOption.SendToRecycleBin, UICancelOption.DoNothing);
-            else if (Path is FileInfo)
-                FileSystem.DeleteFile(Path.FullName, UIOption.OnlyErrorDialogs,
+            else if (File.Exists(Path))
+                FileSystem.DeleteFile(Path, UIOption.OnlyErrorDialogs,
                     RecycleOption.SendToRecycleBin, UICancelOption.DoNothing);
-            else
-                throw new NotImplementedException("Unknown FileSystemInfo implementation");
         }
 
         public override string GetDisplayName()
         {
-            return Path.FullName;
+            return Path;
         }
 
         [PermissionSet(SecurityAction.LinkDemand, Name = "FullTrust")]
         public override void Open()
         {
-            if (Path.Exists)
-                WindowsTools.OpenExplorerFocusedOnObject(Path.FullName);
+            if (File.Exists(Path))
+                WindowsTools.OpenExplorerFocusedOnObject(Path);
             else
-                throw new FileNotFoundException(null, Path.FullName);
+                throw new FileNotFoundException(null, Path);
         }
     }
 }

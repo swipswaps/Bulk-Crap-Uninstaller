@@ -21,7 +21,7 @@ namespace UninstallTools.Factory.InfoAdders
             {
                 string resultFilename = null;
 
-                if (File.Exists(entry.DisplayIcon))
+                if (UninstallToolsGlobalConfig.IO.FileExists(entry.DisplayIcon))
                     resultFilename = entry.DisplayIcon;
 
                 if (resultFilename == null)
@@ -29,7 +29,7 @@ namespace UninstallTools.Factory.InfoAdders
                     try
                     {
                         var fName = ProcessTools.SeparateArgsFromCommand(entry.DisplayIcon).FileName;
-                        if (fName != null && File.Exists(fName))
+                        if (fName != null && UninstallToolsGlobalConfig.IO.FileExists(fName))
                         {
                             resultFilename = fName;
                         }

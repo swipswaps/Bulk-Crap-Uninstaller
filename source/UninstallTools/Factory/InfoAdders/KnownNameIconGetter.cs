@@ -46,10 +46,10 @@ namespace UninstallTools.Factory.InfoAdders
             {
                 // Look for icons with known names in InstallLocation and UninstallerLocation
                 var query = from targetDir in new[] {entry.InstallLocation, entry.UninstallerLocation}
-                    where !string.IsNullOrEmpty(targetDir) && Directory.Exists(targetDir)
+                    where !string.IsNullOrEmpty(targetDir) && UninstallToolsGlobalConfig.IO.DirectoryExists(targetDir)
                     from iconName in IconNames
                     let combinedIconPath = Path.Combine(targetDir, iconName)
-                    where File.Exists(combinedIconPath)
+                    where UninstallToolsGlobalConfig.IO.FileExists(combinedIconPath)
                     select combinedIconPath;
 
                 foreach (var iconPath in query)

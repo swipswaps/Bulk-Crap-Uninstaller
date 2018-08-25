@@ -63,7 +63,7 @@ namespace UninstallTools.Startup.Normal
         /// </summary>
         private static IEnumerable<StartupEntry> GetDriveStartupItems(StartupPointData point)
         {
-            if (!Directory.Exists(point.Path))
+            if (!UninstallToolsGlobalConfig.IO.DirectoryExists(point.Path))
                 yield break;
 
             foreach (var name in Directory.GetFiles(point.Path)

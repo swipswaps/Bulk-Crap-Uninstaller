@@ -23,6 +23,9 @@ namespace UninstallTools.Factory
 
         public static IList<ApplicationUninstallerEntry> GetUninstallerEntries(ListGenerationProgress.ListGenerationCallback callback)
         {
+            // todo threaded?
+            UninstallToolsGlobalConfig.IO.ReloadFilesystemInfo();
+
             const int totalStepCount = 8;
             var currentStep = 1;
 
@@ -251,7 +254,7 @@ namespace UninstallTools.Factory
                 isPathRooted = false;
             }
 
-            if (isPathRooted && File.Exists(target.UninstallerFullFilename))
+            if (isPathRooted && UninstallToolsGlobalConfig.IO.FileExists(target.UninstallerFullFilename))
                 return true;
 
             if (target.UninstallerKind == UninstallerType.Msiexec)

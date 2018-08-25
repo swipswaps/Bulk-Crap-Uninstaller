@@ -27,7 +27,7 @@ namespace UninstallTools.Junk
             var fileSystemJunk = x as FileSystemJunk;
             if (fileSystemJunk != null)
             {
-                return !fileSystemJunk.Path.FullName.StartsWith(UninstallToolsGlobalConfig.AssemblyLocation, StringComparison.OrdinalIgnoreCase);
+                return !fileSystemJunk.Path.StartsWith(UninstallToolsGlobalConfig.AssemblyLocation, StringComparison.OrdinalIgnoreCase);
             }
 
             var startupJunk = x as StartupJunkNode;
@@ -67,6 +67,8 @@ namespace UninstallTools.Junk
             ICollection<ApplicationUninstallerEntry> allUninstallers, ListGenerationProgress.ListGenerationCallback progressCallback)
         {
             progressCallback(new ListGenerationProgress(-1, 0, Localisation.Junk_Progress_Startup));
+
+            UninstallToolsGlobalConfig.IO.ReloadFilesystemInfo();
 
             var scanners = ReflectionTools.GetTypesImplementingBase<IJunkCreator>()
                 .Select(Activator.CreateInstance)

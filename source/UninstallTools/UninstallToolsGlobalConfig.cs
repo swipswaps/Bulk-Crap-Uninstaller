@@ -21,7 +21,7 @@ namespace UninstallTools
                 AssemblyLocation = PathTools.GetDirectory(AssemblyLocation);
 
             UninstallerAutomatizerPath = Path.Combine(AssemblyLocation, @"UninstallerAutomatizer.exe");
-            UninstallerAutomatizerExists = File.Exists(UninstallerAutomatizerPath);
+            UninstallerAutomatizerExists = IO.FileExists(UninstallerAutomatizerPath);
 
             QuestionableDirectoryNames = new[]
             {
@@ -58,12 +58,12 @@ namespace UninstallTools
             if (!string.IsNullOrEmpty(appDataParentDir))
             {
                 var lowDir = Path.Combine(appDataParentDir, "LocalLow");
-                if (Directory.Exists(lowDir))
+                if (IO.DirectoryExists(lowDir))
                     paths.Add(lowDir);
             }
 
             var vsPath = Path.Combine(localData, "VirtualStore");
-            if (Directory.Exists(vsPath))
+            if (IO.DirectoryExists(vsPath))
                 paths.AddRange(Directory.GetDirectories(vsPath));
 
             JunkSearchDirs = paths.Distinct().ToList().AsEnumerable();
@@ -81,7 +81,7 @@ namespace UninstallTools
                     var cachePath = AppInfoCachePath;
                     try
                     {
-                        if (File.Exists(cachePath))
+                        if (IO.FileExists(cachePath))
                             UninstallerFactoryCache = ApplicationUninstallerFactoryCache.Load(cachePath);
                         else
                             UninstallerFactoryCache = new ApplicationUninstallerFactoryCache(cachePath);
@@ -99,6 +99,8 @@ namespace UninstallTools
                 }
             }
         }
+
+        public static FastFilesystemAccessWrapper IO { get; } = new FastFilesystemAccessWrapper();
 
         public static string AppInfoCachePath { get; }
         
@@ -184,7 +186,7 @@ namespace UninstallTools
         ///     The boolean value is true if the directory is confirmed to contain 64bit applications, false if 32bit.
         /// </summary>
         /// <param name="includeUserDirectories">Add user-defined directories.</param>
-        internal static IEnumerable<KeyValuePair<DirectoryInfo, bool?>> GetProgramFilesDirectories(
+        internal static IEnumerable<KeyValuePair<string, bool?>> GetProgramFilesDirectories(
             bool includeUserDirectories)
         {
             var pfDirectories = new List<KeyValuePair<string, bool?>>(2);
@@ -200,15 +202,14 @@ namespace UninstallTools
                     x => !pfDirectories.Any(y => PathTools.PathsEqual(x, y.Key)))
                     .Select(x => new KeyValuePair<string, bool?>(x, null)));
 
-            var output = new List<KeyValuePair<DirectoryInfo, bool?>>();
+            var output = new List<KeyValuePair<string, bool?>>();
             foreach (var directory in pfDirectories.ToList())
             {
                 // Ignore missing or inaccessible directories
                 try
                 {
-                    var di = new DirectoryInfo(directory.Key);
-                    if (di.Exists)
-                        output.Add(new KeyValuePair<DirectoryInfo, bool?>(di, directory.Value));
+                    if(IO.DirectoryExists(directory.Key))
+                        output.Add(new KeyValuePair<string, bool?>(directory.Key, directory.Value));
                 }
                 catch (Exception ex)
                 {
@@ -219,21 +220,23 @@ namespace UninstallTools
             return output;
         }
 
-        /// <summary>
+        /*/// <summary>
         ///     Check if dir is a system directory and should be left alone.
         /// </summary>
         public static bool IsSystemDirectory(DirectoryInfo dir)
         {
             return DirectoryBlacklist.Any(y => y.Equals(dir.Name, StringComparison.InvariantCultureIgnoreCase))
                 || (dir.Attributes & FileAttributes.System) == FileAttributes.System;
-        }
+        }*/
         
         /// <summary>
         ///     Check if dir is a system directory and should be left alone.
         /// </summary>
         public static bool IsSystemDirectory(string installLocation)
         {
-            return IsSystemDirectory(new DirectoryInfo(installLocation));
+            var name = Path.GetFileName(installLocation);
+            return DirectoryBlacklist.Any(y => y.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+                   || IO.DirectoryHasSystemAttribute(installLocation);
         }
 
         /// <summary>
@@ -241,7 +244,7 @@ namespace UninstallTools
         /// </summary>
         internal static Icon TryExtractAssociatedIcon(string path)
         {
-            if (path != null && File.Exists(path))
+            if (path != null && IO.FileExists(path))
             {
                 try
                 {

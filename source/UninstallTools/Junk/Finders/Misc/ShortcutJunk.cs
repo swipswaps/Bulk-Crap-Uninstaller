@@ -110,7 +110,7 @@ namespace UninstallTools.Junk.Finders.Misc
             // Remove shortcuts that we aren't sure about
             foreach (var junkNode in results.ToList())
             {
-                var name = Path.GetFileNameWithoutExtension(junkNode.Path.Name);
+                var name = Path.GetFileNameWithoutExtension(junkNode.Path);
                 junkNode.Confidence.AddRange(ConfidenceGenerators.GenerateConfidence(name, target));
 
                 if (junkNode.Confidence.IsEmpty)
@@ -151,7 +151,7 @@ namespace UninstallTools.Junk.Finders.Misc
 
         private FileSystemJunk CreateJunkNode(Shortcut source, ApplicationUninstallerEntry entry)
         {
-            return new FileSystemJunk(new FileInfo(source.LinkFilename), entry, this);
+            return new FileSystemJunk(source.LinkFilename, entry, this);
         }
 
         private IEnumerable<FileSystemJunk> GetLinksPointingToLocation(

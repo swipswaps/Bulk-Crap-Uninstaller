@@ -27,11 +27,11 @@ namespace UninstallTools.Junk.Finders.Drive
             {
                 WindowsTools.GetEnvironmentPath(Klocman.Native.CSIDL.CSIDL_COMMON_APPDATA),
                 WindowsTools.GetEnvironmentPath(Klocman.Native.CSIDL.CSIDL_LOCAL_APPDATA)
-            }.SelectMany(x =>new[]
+            }.SelectMany(x => new[]
             {
                 Path.Combine(x, @"Microsoft\Windows\WER\ReportArchive"),
                 Path.Combine(x, @"Microsoft\Windows\WER\ReportQueue")
-            }).Where(Directory.Exists)
+            }).Where(UninstallToolsGlobalConfig.IO.DirectoryExists)
             .ToArray();
         }
 
@@ -62,7 +62,7 @@ namespace UninstallTools.Junk.Finders.Drive
 
                 if (appExecutables.Any(x => x.StartsWith(filename, StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    var node = new FileSystemJunk(new DirectoryInfo(reportPath),target, this);
+                    var node = new FileSystemJunk(reportPath, target, this);
                     node.Confidence.Add(ConfidenceRecords.ExplicitConnection);
                     yield return node;
                 }

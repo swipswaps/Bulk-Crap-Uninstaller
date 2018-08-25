@@ -194,7 +194,7 @@ namespace UninstallTools.Junk.Finders.Registry
             else if (ExeOrDirPathKeyNames.Contains(valueName, StringComparison.InvariantCultureIgnoreCase))
             {
                 var path = softwareKey.GetValue(valueName) as string;
-                hit = File.Exists(path)
+                hit = UninstallToolsGlobalConfig.IO.FileExists(path)
                     ? TestPathsMatchExe(softwareKey.GetValue(valueName) as string)
                     : SubPathIsInsideBasePath(_uninstaller.InstallLocation, softwareKey.GetValue(valueName) as string);
             }

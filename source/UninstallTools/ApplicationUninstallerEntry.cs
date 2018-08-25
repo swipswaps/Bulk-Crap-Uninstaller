@@ -474,7 +474,7 @@ namespace UninstallTools
             try
             {
                 path = ProcessTools.SeparateArgsFromCommand(path).FileName;
-                if (!isFilename && path.Contains('.') && !Directory.Exists(path))
+                if (!isFilename && path.Contains('.') && !UninstallToolsGlobalConfig.IO.DirectoryExists(path))
                     return Path.GetDirectoryName(path);
             }
             catch

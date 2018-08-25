@@ -85,7 +85,7 @@ namespace UninstallTools.Uninstaller
                     try
                     {
                         startInfo = ProcessTools.SeparateArgsFromCommand(entry.QuietUninstallString).ToProcessStartInfo();
-                        Debug.Assert(!startInfo.FileName.Contains(' ') || File.Exists(startInfo.FileName));
+                        Debug.Assert(!startInfo.FileName.Contains(' ') || UninstallToolsGlobalConfig.IO.FileExists(startInfo.FileName));
                     }
                     catch (FormatException)
                     {
@@ -98,7 +98,7 @@ namespace UninstallTools.Uninstaller
                     try
                     {
                         startInfo = ProcessTools.SeparateArgsFromCommand(entry.UninstallString).ToProcessStartInfo();
-                        Debug.Assert(!startInfo.FileName.Contains(' ') || File.Exists(startInfo.FileName));
+                        Debug.Assert(!startInfo.FileName.Contains(' ') || UninstallToolsGlobalConfig.IO.FileExists(startInfo.FileName));
 
                         if (entry.UninstallerKind == UninstallerType.Nsis && !safeMode)
                             UpdateNsisStartInfo(startInfo, entry.DisplayName);

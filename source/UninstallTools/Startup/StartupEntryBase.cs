@@ -109,7 +109,7 @@ namespace UninstallTools.Startup
         /// </summary>
         protected void FillInformationFromFile(string commandFilename)
         {
-            if (!File.Exists(commandFilename))
+            if (!UninstallToolsGlobalConfig.IO.FileExists(commandFilename))
                 return;
 
             try

@@ -57,7 +57,7 @@ namespace UninstallTools.Junk.Finders
                 if (dirInfo.FullName.Contains(FullWindowsDirectoryName) || !dirInfo.Exists || dirInfo.Parent == null)
                     return null;
 
-                var newNode = new FileSystemJunk(dirInfo, app, this);
+                var newNode = new FileSystemJunk(dirInfo.FullName, app, this);
                 newNode.Confidence.Add(ConfidenceRecords.ExplicitConnection);
 
                 if (CheckIfDirIsStillUsed(dirInfo.FullName, otherInstallLocations))

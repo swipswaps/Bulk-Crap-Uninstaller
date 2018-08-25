@@ -125,7 +125,7 @@ namespace UninstallTools.Startup.Normal
             }
             else
             {
-                if (File.Exists(startupEntry.FullLongName))
+                if (UninstallToolsGlobalConfig.IO.FileExists(startupEntry.FullLongName))
                 {
                     var newPath = Path.Combine(target.Path, startupEntry.EntryLongName);
                     File.Delete(newPath);
@@ -179,18 +179,18 @@ namespace UninstallTools.Startup.Normal
             }
             else
             {
-                if (!File.Exists(newPath))
+                if (!UninstallToolsGlobalConfig.IO.FileExists(newPath))
                     File.Delete(newPath);
 
                 if (startupEntry.Disabled)
                 {
                     var disabledFile = DisableFunctions.GetDisabledEntryPath(startupEntry);
-                    if (File.Exists(disabledFile))
+                    if (UninstallToolsGlobalConfig.IO.FileExists(disabledFile))
                         File.Copy(disabledFile, newPath);
                 }
                 else
                 {
-                    if (File.Exists(startupEntry.FullLongName))
+                    if (UninstallToolsGlobalConfig.IO.FileExists(startupEntry.FullLongName))
                         File.Copy(startupEntry.FullLongName, newPath);
                 }
             }

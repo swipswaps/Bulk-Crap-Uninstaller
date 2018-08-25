@@ -113,7 +113,13 @@ namespace UninstallTools.Lists
                         case ComparisonMethod.Regex:
                             result = Regex.IsMatch(target, FilterText, RegexOptions.CultureInvariant);
                             break;
-
+                            
+                        case ComparisonMethod.MoreThan:
+                            result = string.Compare(target, FilterText, StringComparison.OrdinalIgnoreCase) > 0;
+                            break;
+                        case ComparisonMethod.LessThan:
+                            result = string.Compare(target, FilterText, StringComparison.OrdinalIgnoreCase) < 0;
+                            break;
                         default:
                             throw new InvalidOperationException("Unknown FilterComparisonMethod");
                     }

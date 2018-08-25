@@ -65,7 +65,7 @@ namespace UninstallTools.Startup.Normal
                     return !string.IsNullOrEmpty(key.GetValue(startupEntry.EntryLongName) as string);
             }
 
-            return File.Exists(startupEntry.FullLongName);
+            return UninstallToolsGlobalConfig.IO.FileExists(startupEntry.FullLongName);
         }
 
         private static bool GetDisabled(StartupEntry startupEntry)
