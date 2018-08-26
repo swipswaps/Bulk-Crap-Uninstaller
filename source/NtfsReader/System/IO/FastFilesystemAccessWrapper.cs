@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO.Filesystem.Ntfs;
 using System.Linq;
+using Klocman.Extensions;
+using Klocman.Tools;
 
 namespace System.IO
 {
@@ -16,8 +18,20 @@ namespace System.IO
             ReloadFilesystemInfo();
         }
 
+        private sealed class NodeEntry
+        {
+            public NodeEntry(INode node, Dictionary<string, NodeEntry> subNodes = null)
+            {
+                Node = node;
+                SubNodes = subNodes ?? new Dictionary<string, NodeEntry>();
+            }
+
+            public INode Node { get; }
+            public Dictionary<string, NodeEntry> SubNodes { get; }
+        }
+
         private readonly Dictionary<string, NtfsReader> _readers = new Dictionary<string, NtfsReader>();
-        private readonly List<INode> _nodes = new List<INode>();
+        private readonly Dictionary<string, NodeEntry> _nodes = new Dictionary<string, NodeEntry>();
 
         public void ReloadFilesystemInfo()
         {
@@ -48,7 +62,24 @@ namespace System.IO
                                     continue;
                                 }
                                 _readers.Add(driveInfo.Name.TrimEnd(':', '\\', ' ').ToLower(), ntfsReader);
-                                _nodes.AddRange(ntfsReader.GetNodes(driveInfo.Name));
+
+                                // nodes are in order based on their indexes, so it's easy to find parents
+                                var nodes = ntfsReader.GetNodes(driveInfo.Name);
+                                // need to add \ to the end for the sorting to work correctly
+                                nodes.Sort((node, node2) => string.Compare(node.FullName + '\\', node2.FullName + '\\', StringComparison.Ordinal));
+                                
+                                var rootNodeName = driveInfo.Name + '.';
+                                var root = nodes.First(x => string.Equals(x.FullName, rootNodeName, StringComparison.OrdinalIgnoreCase));
+
+                                var path = new Stack<NodeEntry>();
+                                foreach (var node in nodes)
+                                {
+                                    // todo put new dirs onto stack, add subdirs/files to it and add those to the stack, 
+                                    // pop if next file is not in this path (startswith)
+                                    // when making nodes make keys ToLowerInvariant
+
+                                    //_nodes.Add(root.FullName.ToLowerInvariant(), new NodeEntry(root, GetSubnodes(root)));
+                                }
                             }
                         }
                         break;
@@ -111,17 +142,37 @@ namespace System.IO
             switch (searchOption)
             {
                 case SearchOption.TopDirectoryOnly:
-                    return _nodes.Where(x => x.ParentNodeIndex == dir.NodeIndex);
+                    return dir.SubNodes.Values.Select(x => x.Node);
                 case SearchOption.AllDirectories:
-                    return _nodes.Where(x => x.FullName.StartsWith(path, StringComparison.OrdinalIgnoreCase) && dir.NodeIndex != x.NodeIndex);
+                    return dir.SubNodes.SelectManyResursively(pair => pair.Value.SubNodes).Select(x => x.Value.Node);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(searchOption), searchOption, null);
             }
         }
 
-        private INode GetFilesystemNode(string path, bool directory)
+        private NodeEntry GetFilesystemNode(string path, bool directory)
         {
-            return _nodes.FirstOrDefault(x => x.FullName.Equals(path, StringComparison.OrdinalIgnoreCase) && IsDirectory(x) == directory);
+            if (path == null) return null;
+            
+            var pathParts = path.ToLowerInvariant().Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+
+            var currentNodes = _nodes;
+            for (var i = 0; i < pathParts.Length; i++)
+            {
+                var part = pathParts[i];
+                if (i == 0) part += '.';
+
+                if (!currentNodes.TryGetValue(part, out var node)) return null;
+
+                if (i == pathParts.Length - 1) return IsDirectory(node.Node) == directory ? node : null;
+
+                currentNodes = node.SubNodes;
+            }
+
+            //todo if (path != null && _nodes.TryGetValue(path.ToLowerInvariant(), out var n) && IsDirectory(n) == directory)
+            //    return n;
+
+            return null;
         }
 
         private static bool IsDirectory(INode x)
@@ -154,7 +205,7 @@ namespace System.IO
             }
 
             var node = GetFilesystemNode(path, true);
-            return node != null && (node.Attributes & Attributes.System) == Attributes.System;
+            return node != null && (node.Node.Attributes & Attributes.System) == Attributes.System;
         }
 
         public DateTime GetDirectoryCreationTime(string directory)
@@ -163,7 +214,7 @@ namespace System.IO
                 return Directory.GetCreationTime(directory);
 
             var n = GetFilesystemNode(directory, true);
-            return n.CreationTime;
+            return n.Node.CreationTime;
         }
         public DateTime GetFileCreationTime(string file)
         {
@@ -171,7 +222,7 @@ namespace System.IO
                 return File.GetCreationTime(file);
 
             var n = GetFilesystemNode(file, false);
-            return n.CreationTime;
+            return n.Node.CreationTime;
         }
     }
 }
