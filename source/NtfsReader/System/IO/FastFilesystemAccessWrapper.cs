@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.IO.Filesystem.Ntfs;
 using System.Linq;
 using Klocman.Extensions;
@@ -43,9 +44,6 @@ namespace System.IO
 
                 switch (driveInfo.DriveType)
                 {
-                    case DriveType.Ram:
-                    case DriveType.Removable:
-                    case DriveType.Unknown:
                     case DriveType.Fixed:
                         if (!string.IsNullOrEmpty(driveInfo.Name))
                         {
@@ -65,33 +63,76 @@ namespace System.IO
 
                                 // nodes are in order based on their indexes, so it's easy to find parents
                                 var nodes = ntfsReader.GetNodes(driveInfo.Name);
-                                // need to add \ to the end for the sorting to work correctly
-                                nodes.Sort((node, node2) => string.Compare(node.FullName + '\\', node2.FullName + '\\', StringComparison.Ordinal));
-                                
+
                                 var rootNodeName = driveInfo.Name + '.';
+                                // the root element is near the beginning (is it better after sorting?)
                                 var root = nodes.First(x => string.Equals(x.FullName, rootNodeName, StringComparison.OrdinalIgnoreCase));
 
+                                nodes.Sort(NodeComparer);
+
                                 var path = new Stack<NodeEntry>();
+                                path.Push(new NodeEntry(root, new Dictionary<string, NodeEntry>()));
                                 foreach (var node in nodes)
                                 {
                                     // todo put new dirs onto stack, add subdirs/files to it and add those to the stack, 
                                     // pop if next file is not in this path (startswith)
                                     // when making nodes make keys ToLowerInvariant
 
-                                    //_nodes.Add(root.FullName.ToLowerInvariant(), new NodeEntry(root, GetSubnodes(root)));
+                                    //if(path.Count == 0)
+                                    var current = path.Peek();
+                                    var name = path.Count == 1 ? driveInfo.Name.TrimEnd('\\') : current.Node.FullName;
+
+                                    var c1 = name.Count(x => x == '\\');
+                                    var c2 = node.FullName.Count(x => x == '\\');
+                                    if (c1 == c2 + 1)
+                                    {
+                                        if (node.FullName.StartsWith(name, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            // direct subdir
+                                            NodeEntry newNodeEntry = new NodeEntry(node, new Dictionary<string, NodeEntry>());
+                                            current.SubNodes.Add(node.FullName.ToLowerInvariant(), newNodeEntry);
+                                            path.Push(newNodeEntry);
+                                        }
+                                        else
+                                        {
+                                            throw new NotImplementedException();
+                                        }
+                                    }
+                                    else if (c1 >= c2)
+                                    {
+                                        // going up
+                                        var count = c1 - c2;
+                                        while (count-- >= 0)
+                                            path.Pop();
+                                        current = path.Peek();
+                                        NodeEntry newNodeEntry = new NodeEntry(node, new Dictionary<string, NodeEntry>());
+                                        current.SubNodes.Add(node.FullName.ToLowerInvariant(), newNodeEntry);
+                                    }
+                                    else
+                                    {
+                                        // going down
+                                        throw new NotImplementedException();
+                                    }
                                 }
                             }
                         }
                         break;
 
+                    case DriveType.Ram:
+                    case DriveType.Removable:
+                    case DriveType.Unknown:
                     case DriveType.NoRootDirectory:
-                        break;
                     case DriveType.Network:
-                        break;
                     case DriveType.CDRom:
                         break;
                 }
             }
+        }
+
+        private int NodeComparer(INode node, INode node2)
+        {
+            // need to add \ to the end for the sorting to work correctly
+            return string.Compare(node.FullName + '\\', node2.FullName + '\\', StringComparison.Ordinal);
         }
 
         private void ResetState()
@@ -153,7 +194,7 @@ namespace System.IO
         private NodeEntry GetFilesystemNode(string path, bool directory)
         {
             if (path == null) return null;
-            
+
             var pathParts = path.ToLowerInvariant().Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
 
             var currentNodes = _nodes;
